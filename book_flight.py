@@ -4,6 +4,25 @@ import argparse
 from datetime import datetime
 
 
+class APIQueryException(Exception):
+    pass
+
+passenger = dict(
+        title='Mr',
+        firstName='Franta',
+        documentID='',
+        birthday='2000-01-01',
+        email='frantik@fitvut.cz',
+        lastName='Frantik')
+booking_data = dict(currency='EUR',
+                    booking_token='',
+                    passengers=passenger)
+
+header = {"Content-type": "application/json"}
+response = requests.post('http://37.139.6.125:8080/booking', json.dumps(booking_data), headers=header)
+print(response)
+
+
 def book_flight(booking_token):
     passenger = dict(
         title='Mr',
@@ -12,22 +31,20 @@ def book_flight(booking_token):
         birthday='2000-01-01',
         email='frantik@fitvut.cz',
         lastName='Frantik')
-    data = dict(currency='EUR',
-                booking_token=booking_token,
-                passengers=passenger)
-    response = query_api('http://37.139.6.125:8080/booking', data, 'POST')
+    booking_data = dict(currency='EUR',
+                        booking_token='',
+                        passengers=passenger)
+    header = {"Content-type": "application/json"}
+    response = requests.post('http://37.139.6.125:8080/booking', json.dumps(booking_data), headers=header)
+    # response = query_api('http://37.139.6.125:8080/booking', booking_data, False)
     print(response)
     return response
 
 
-class APIQueryException(Exception):
-    pass
-
-
-def query_api(url, url_options, method='GET'):
+def query_api(url, url_options):
     header = {"Content-type": "application/json"}
     try:
-        response = requests.get(url, params=url_options)
+        response = requests.get(url, params=url_options, headers=header)
         response.raise_for_status()
         return response.json()
     except requests.HTTPError as detail:
@@ -99,8 +116,9 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': 'LHR', 'to': 'DXB',
+    query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': args.fly_from, 'to': args.to,
                                                                   'dateFrom': args.date})
+    print(query_data)
 
     # book_flight(query_data['data'][1]['booking_token'])
     print(args)
