@@ -2,6 +2,7 @@
 import requests
 import json
 import argparse
+
 from datetime import datetime
 
 
@@ -14,6 +15,12 @@ class FlightBookingException(Exception):
 
 
 def book_ticket(booking_token):
+    """
+    Function for booking ticket in a specific flight
+
+    :param booking_token: Unique id of flight in which the ticket will be booked
+    :return: result of query_api function
+    """
     passenger = dict(
         title='Mr',
         firstName='Franta',
@@ -24,11 +31,16 @@ def book_ticket(booking_token):
     booking_data = dict(currency='EUR',
                         booking_token=booking_token,
                         passengers=passenger)
-    response = query_api('http://37.139.6.125:8080/booking', booking_data, False)
-    return response
+    return query_api('http://37.139.6.125:8080/booking', booking_data, False)
 
 
 def book_flight(possible_flights):
+    """
+    Function for booking single flight
+
+    :param possible_flights: dictionary of queried flights
+    :return: booked ticket PNR code or exception when all flights are occupied
+    """
     for flight in possible_flights['data']:
         ticket = book_ticket(flight['booking_token'])
         print(flight['id'])
@@ -39,6 +51,14 @@ def book_flight(possible_flights):
 
 
 def query_api(url, url_options, get_method=True):
+    """
+    Function for querying api with given params
+
+    :param url: API url
+    :param url_options: API options
+    :param get_method: Boolean value which indicates whether it is a get or post api call
+    :return: queried data in dictionary or raises exception in case of any problem
+    """
     header = {"Content-type": "application/json"}
     try:
         if get_method:
@@ -53,6 +73,12 @@ def query_api(url, url_options, get_method=True):
 
 
 def get_flights(args):
+    """
+    Function for finding relevant flights according to input arguments
+
+    :param args: input arguments
+    :return: dictionary of relevant flights
+    """
     flight_params = dict(flyFrom=args.fly_from, to=args.to, dateFrom=args.date, dateTo=args.date,
                          typeFlight='oneway')
     if args.shortest:
@@ -60,7 +86,8 @@ def get_flights(args):
     elif args.cheapest:
         flight_params['sort'] = 'price'
     elif args.return_days > 0:
-        pass
+        flight_params['typeFlight'] = 'round'
+        flight_params['daysInDestinationTo'] = args.return_days
     return query_api('https://api.skypicker.com/flights?', flight_params)
 
 
@@ -112,7 +139,7 @@ def parse_args():
         type=int,
         dest='return_days',
         default=0,
-        help='Random one way flight.'
+        help='Pick rounded flight according to given days in destination.'
     )
     group.add_argument(
         '--cheapest',
@@ -128,8 +155,5 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    flights = get_flights(args)
-    # query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': args.fly_from, 'to': args.to,
-    #                                                              'dateFrom': args.date})
+    flights = get_flights(parse_args())
     print(book_flight(flights))

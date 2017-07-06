@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import unittest
+
 from argparse import ArgumentTypeError
+
 from book_flight import valid_date, query_api, book_flight, book_ticket
 from book_flight import APIQueryException, get_flights
 
@@ -54,6 +56,14 @@ class MyTestCase(unittest.TestCase):
     def test_cheapest_flight(self):
         args = ArgparseObject()
         args.cheapest = True
+        flights = get_flights(args)
+        pnr = book_flight(flights)
+        self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
+        self.assertEqual(flights['data'][0]['id'], self.CHEAPEST_FLIGHT_ID)
+
+    def test_return_flight(self):
+        args = ArgparseObject()
+        args.return_days = 5
         flights = get_flights(args)
         pnr = book_flight(flights)
         self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
