@@ -31,6 +31,7 @@ def book_ticket(booking_token):
 def book_flight(possible_flights):
     for flight in possible_flights['data']:
         ticket = book_ticket(flight['booking_token'])
+        print(flight['id'])
         if ticket['status'] == 'confirmed':
             return ticket['pnr']
     raise FlightBookingException("ERROR: Unable to find free flight. Ticket was not booked."
@@ -49,6 +50,18 @@ def query_api(url, url_options, get_method=True):
     except requests.HTTPError as detail:
         raise APIQueryException("ERROR: Unable to access url '{0}' with given options '{1}'."
                                 "With these details: '{2}'".format(url, url_options, detail))
+
+
+def get_flights(args):
+    flight_params = dict(flyFrom=args.fly_from, to=args.to, dateFrom=args.date, dateTo=args.date,
+                         typeFlight='oneway')
+    if args.shortest:
+        flight_params['sort'] = "duration"
+    elif args.cheapest:
+        flight_params['sort'] = 'price'
+    elif args.return_days > 0:
+        pass
+    return query_api('https://api.skypicker.com/flights?', flight_params)
 
 
 def valid_date(s):
@@ -97,6 +110,7 @@ def parse_args():
     group.add_argument(
         '--return',
         type=int,
+        dest='return_days',
         default=0,
         help='Random one way flight.'
     )
@@ -115,6 +129,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': args.fly_from, 'to': args.to,
-                                                                  'dateFrom': args.date})
-    print(book_flight(query_data))
+    flights = get_flights(args)
+    # query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': args.fly_from, 'to': args.to,
+    #                                                              'dateFrom': args.date})
+    print(book_flight(flights))
