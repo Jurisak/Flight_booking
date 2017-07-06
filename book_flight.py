@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import requests
 import json
 import argparse
@@ -7,44 +8,42 @@ from datetime import datetime
 class APIQueryException(Exception):
     pass
 
-passenger = dict(
-        title='Mr',
-        firstName='Franta',
-        documentID='',
-        birthday='2000-01-01',
-        email='frantik@fitvut.cz',
-        lastName='Frantik')
-booking_data = dict(currency='EUR',
-                    booking_token='',
-                    passengers=passenger)
 
-header = {"Content-type": "application/json"}
-response = requests.post('http://37.139.6.125:8080/booking', json.dumps(booking_data), headers=header)
-print(response)
+class FlightBookingException(Exception):
+    pass
 
 
-def book_flight(booking_token):
+def book_ticket(booking_token):
     passenger = dict(
         title='Mr',
         firstName='Franta',
         documentID='',
         birthday='2000-01-01',
-        email='frantik@fitvut.cz',
-        lastName='Frantik')
+        email='Novak@fitvut.cz',
+        lastName='Novak')
     booking_data = dict(currency='EUR',
-                        booking_token='',
+                        booking_token=booking_token,
                         passengers=passenger)
-    header = {"Content-type": "application/json"}
-    response = requests.post('http://37.139.6.125:8080/booking', json.dumps(booking_data), headers=header)
-    # response = query_api('http://37.139.6.125:8080/booking', booking_data, False)
-    print(response)
+    response = query_api('http://37.139.6.125:8080/booking', booking_data, False)
     return response
 
 
-def query_api(url, url_options):
+def book_flight(possible_flights):
+    for flight in possible_flights['data']:
+        ticket = book_ticket(flight['booking_token'])
+        if ticket['status'] == 'confirmed':
+            return ticket['pnr']
+    raise FlightBookingException("ERROR: Unable to find free flight. Ticket was not booked."
+                                 "Please try different date.")
+
+
+def query_api(url, url_options, get_method=True):
     header = {"Content-type": "application/json"}
     try:
-        response = requests.get(url, params=url_options, headers=header)
+        if get_method:
+            response = requests.get(url, url_options, headers=header)
+        else:
+            response = requests.post(url, json.dumps(url_options), headers=header)
         response.raise_for_status()
         return response.json()
     except requests.HTTPError as detail:
@@ -118,7 +117,4 @@ if __name__ == '__main__':
     args = parse_args()
     query_data = query_api('https://api.skypicker.com/flights?', {'flyFrom': args.fly_from, 'to': args.to,
                                                                   'dateFrom': args.date})
-    print(query_data)
-
-    # book_flight(query_data['data'][1]['booking_token'])
-    print(args)
+    print(book_flight(query_data))
