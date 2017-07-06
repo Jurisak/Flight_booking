@@ -69,5 +69,33 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
         self.assertEqual(flights['data'][0]['id'], self.CHEAPEST_FLIGHT_ID)
 
+    def test_program_invocations(self):
+        # Testing return invocation
+        args = ArgparseObject()
+        args.fly_from = 'LHR'
+        args.to = 'DXB'
+        args.return_days = 5
+        flights = get_flights(args)
+        pnr = book_flight(flights)
+        self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
+
+        # Testing cheapest invocation
+        args = ArgparseObject()
+        args.fly_from = 'NRT'
+        args.to = 'SYD'
+        args.cheapest = True
+        flights = get_flights(args)
+        pnr = book_flight(flights)
+        self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
+
+        # Testing shortest invocation
+        args = ArgparseObject()
+        args.fly_from = 'CPH'
+        args.to = 'MIA'
+        args.shortest = True
+        flights = get_flights(args)
+        pnr = book_flight(flights)
+        self.assertEqual(len(pnr), self.PNR_CODE_SIZE)
+
 if __name__ == '__main__':
     unittest.main()

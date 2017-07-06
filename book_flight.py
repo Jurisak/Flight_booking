@@ -43,7 +43,6 @@ def book_flight(possible_flights):
     """
     for flight in possible_flights['data']:
         ticket = book_ticket(flight['booking_token'])
-        print(flight['id'])
         if ticket['status'] == 'confirmed':
             return ticket['pnr']
     raise FlightBookingException("ERROR: Unable to find free flight. Ticket was not booked."
